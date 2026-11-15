@@ -1,0 +1,16 @@
+/* Cosecha: asistente de chat (reglas + modelo de IA opcional) */
+var CH=[],busy=0;
+function say(r,x){CH.push({r:r,t:x});var d=document.createElement("div");d.className="msg "+r;d.textContent=x;$("msgs").appendChild(d);$("msgs").scrollTop=1e6;return d}
+function initChat(){$("cm").value=ls("cm")||"";$("ck").value=ls("ck")||"";$("api").value=ls("api")||"";if(!CH.length){say("a",t("cHello"));$("cc").innerHTML=tl("cq").map(function(x){return'<button class="chip" onclick="askC(this.textContent)">'+x+"</button>"}).join("")}}
+function saveCfg(){ls("cm",$("cm").value.trim());ls("ck",$("ck").value.trim());toast(t("saved"))}
+function sendC(){var x=$("ci").value.trim();if(x){$("ci").value="";askC(x)}}
+function ctx(){var f=FARM,c="Zona: Cochabamba, Bolivia. Emergencia nacional por Súper Niño 2026-27.";if(f.lat!==undefined){var m=M[f.mun];c+=" Granja: "+(f.n||"sin nombre")+", municipio "+m[0]+" ("+t("t_"+m[3])+"), cultivo "+(CROPS[f.k]?t("c_"+f.k):"no indicado")+", "+(f.h||"?")+" ha."}if(FS&&!FS.demo)c+=" Datos NASA POWER de su granja: lluvia 90 días "+FS.prp+"% vs normal ("+FS.pr+" mm), humedad del suelo "+FS.smp+"% vs normal, "+FS.fz+" días con noche fría, "+FS.hv+" días de lluvia fuerte, humedad del aire "+FS.rh+"%.";return c}
+function rule(q){q=q.toLowerCase();if(/ni[ñn]o/.test(q))return t("rNino");if(/rieg|agua|sequ|yaku|drought|water|irrig/.test(q))return t("rAgua");if(/helad|qasa|frost/.test(q))return t("rHel");if(/dato|granja|estad|data|farm|yupay/.test(q)&&FS&&!FS.demo)return t("rDato",FS.prp,FS.smp);return t("rDef")}
+function sysPrompt(){var lg=LANG=="en"?"Reply in English.":LANG=="qu"?"Responde en quechua boliviano (variedad de Cochabamba, alfabeto oficial boliviano). Nunca uses quechua peruano. Frases muy simples; si no estás seguro de una palabra, usa la palabra en español.":"Responde en español.";
+return "Eres «Cosecha», asistente de una app para agricultores de Cochabamba, Bolivia. "+lg+" Habla muy sencillo, frases cortas, máximo 110 palabras; usa viñetas «•» si das pasos. Apóyate en el CONTEXTO y di que los datos vienen de la NASA cuando los uses. No inventes cifras, precios ni teléfonos. Para decisiones importantes recomienda hablar con un técnico agrónomo, la alcaldía o INIAF. CONTEXTO: "+ctx()}
+async function llm(msgs){var u=apiUrl(),k=ls("ck"),mod=ls("cm")||"gpt-5.3-chat-latest";
+if(u){var r=await fetch(u,{method:"POST",body:JSON.stringify({action:"chat",messages:msgs})}),j=await r.json();if(j.error)throw new Error(j.error);return j.text}
+if(k){var r2=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+k},body:JSON.stringify({model:mod,messages:msgs})}),j2=await r2.json();if(j2.error)throw new Error(j2.error.message);return j2.choices[0].message.content}return null}
+async function askC(q){if(busy)return;busy=1;$("cc").innerHTML="";say("u",q);var box=say("a","…"),a=null;
+try{var h=CH.slice(-9,-2).map(function(x){return{role:x.r=="u"?"user":"assistant",content:x.t}});h.unshift({role:"system",content:sysPrompt()});h.push({role:"user",content:q});a=await llm(h);if(!a)a=rule(q)+"\n\n"+t("cMore")}catch(e){a=t("cFail",e.message)+"\n"+rule(q)}
+box.textContent=a;CH[CH.length-1]={r:"a",t:a};busy=0;$("msgs").scrollTop=1e6}
