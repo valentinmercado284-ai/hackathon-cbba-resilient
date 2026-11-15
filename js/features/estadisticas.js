@@ -1,30 +1,155 @@
-/* Estadísticas con NASA POWER: descarga, cálculos, gráfico y recomendaciones */
-var FS=null;
-function sum(a){return a.reduce(function(s,v){return v==v?s+v:s},0)}function avg(a){var n=a.filter(function(v){return v==v});return n.length?sum(n)/n.length:NaN}
-function calc(p){var ks=Object.keys(p.PRECTOTCORR).sort(),n=ks.length;function A(k){return ks.map(function(d){var v=p[k][d];return v<-990?NaN:v})}
-var pr=A("PRECTOTCORR"),tt=A("T2M"),tm=A("T2M_MIN"),sm=A("GWETROOT"),rh=A("RH2M");
-function win(a,len,f){var cur=f(a.slice(n-len)),b=[];for(var y=1;y<=15;y++){var e=n-Math.round(365.25*y),s=e-len;if(s<0)break;b.push(f(a.slice(s,e)))}var m=avg(b);return{cur:cur,pct:m?Math.round(100*(cur-m)/Math.abs(m)):NaN}}
-var r90=win(pr,90,sum),s30=win(sm,30,avg),dry=0,mx=0;pr.slice(-90).forEach(function(v){if(v<1){dry++;mx=Math.max(mx,dry)}else dry=0});
-var ym={},yy={};ks.forEach(function(d,i){var k=d.slice(0,6);(ym[k]=ym[k]||[]).push(pr[i]);var y=d.slice(0,4);(yy[y]=yy[y]||[]).push(tt[i])});
-var mk=Object.keys(ym).sort(),l12=mk.slice(-12),ch=l12.map(function(k){var o=mk.filter(function(q){return q.slice(4)==k.slice(4)&&l12.indexOf(q)<0&&ym[q].length>27}).map(function(q){return sum(ym[q])});return{k:k,v:sum(ym[k]),n:avg(o)}});
-var ys=Object.keys(yy).filter(function(y){return yy[y].length>360}).map(Number),tr=NaN;if(ys.length>3){var ya=ys.map(function(y){return avg(yy[y])}),mx_=avg(ys),my=avg(ya),nu=0,de=0;ys.forEach(function(x,i){nu+=(x-mx_)*(ya[i]-my);de+=(x-mx_)*(x-mx_)});tr=+(10*nu/de).toFixed(2)}
-return{pr:Math.round(r90.cur),prp:r90.pct,sm:+(s30.cur*100).toFixed(0),smp:s30.pct,rh:Math.round(avg(rh.slice(-30))),fz:tm.slice(-365).filter(function(v){return v<=2}).length,hv:pr.slice(-365).filter(function(v){return v>=20}).length,dry:mx,t:+avg(tt.slice(-365)).toFixed(1),tr:tr,ch:ch,fecha:ks[n-1]}}
-function lev(s){return{s:(s.prp<=-40||s.smp<=-25)?3:(s.prp<=-20||s.smp<=-12)?2:(s.prp<=-5||s.smp<=-3)?1:0,i:(s.smp<=-15&&s.rh<=40)?3:(s.smp<=-8||s.rh<=45)?2:s.rh<=55?1:0,f:s.hv>=4?3:s.hv>=2?2:s.hv>=1?1:0,h:s.fz>=60?3:s.fz>=25?2:s.fz>=5?1:0}}
-function demoStats(){var now=new Date(),ch=[],nm=[100,90,60,20,5,2,3,8,20,35,50,80],i;for(i=11;i>=0;i--){var d=new Date(now.getFullYear(),now.getMonth()-i,1),m=d.getMonth();ch.push({k:d.getFullYear()+("0"+(m+1)).slice(-2),v:Math.round(nm[m]*.65),n:nm[m]})}
-var s={pr:96,prp:-34,sm:31,smp:-16,rh:46,fz:14,hv:2,dry:23,t:17.9,tr:0.3,ch:ch,fecha:"demo",demo:1};s.lv=lev(s);return s}
-async function load(){if(CFG.DEMO){FS=demoStats();return FS}var e=new Date(Date.now()-3*864e5).toISOString().slice(0,10).replace(/-/g,""),ac=new AbortController(),to=setTimeout(function(){ac.abort()},40000);
-try{var r=await fetch("https://power.larc.nasa.gov/api/temporal/daily/point?parameters=PRECTOTCORR,T2M,T2M_MIN,GWETROOT,RH2M&community=AG&longitude="+FARM.lon+"&latitude="+FARM.lat+"&start=20100101&end="+e+"&format=JSON",{signal:ac.signal}),j=await r.json();FS=calc(j.properties.parameter);FS.lv=lev(FS);return FS}finally{clearTimeout(to)}}
-function chart(ch){var w=330,h=130,mx=Math.max.apply(0,ch.map(function(c){return Math.max(c.v,c.n||0)}))||1,bw=w/12,s='<svg viewBox="0 0 '+w+" "+(h+16)+'" style="width:100%">';
-ch.forEach(function(c,i){var bh=c.v/mx*h,nh=(c.n||0)/mx*h;s+='<rect x="'+(i*bw+4)+'" y="'+(h-bh)+'" width="'+(bw-8)+'" height="'+bh+'" fill="#1565c0" rx="3"/><line x1="'+(i*bw+2)+'" x2="'+((i+1)*bw-2)+'" y1="'+(h-nh)+'" y2="'+(h-nh)+'" stroke="#c62828" stroke-width="3"/><text x="'+(i*bw+bw/2)+'" y="'+(h+13)+'" font-size="9" text-anchor="middle" fill="currentColor">'+c.k.slice(4)+"</text>"});return s+"</svg>"}
-function recs(){var c=CROPS[FARM.k||"maiz"],s=FS,l=s.lv,need=Math.round(c[0]*90/c[1]),bal=s.pr-need,nm=t("c_"+(FARM.k||"maiz")),r=[];
-r.push(bal<0?t("rW1",s.pr,nm,need,-bal):t("rW2",s.pr,nm,need));if(l.s>=2)r.push(t("rS",t("l"+l.s).toLowerCase()));if(l.h>=2&&c[2])r.push(t("rH",s.fz));if(l.f>=2)r.push(t("rF",s.hv));if(l.i>=2)r.push(t("rI"));if(FARM.p=="2")r.push(t("rSl"));
-[3,0,2,1].forEach(function(k){if(l[KEYS[k]]>=2)r=r.concat(tl("a_"+KEYS[k]))});return r.slice(0,9)}
-async function showStats(){var el=$("stats");if(FARM.lat===undefined){el.innerHTML='<div class="card">'+t("sFirst")+"</div>";return}
-el.innerHTML='<div class="card">'+t("sLoad")+"</div>";
-try{if(!FS)await load()}catch(e){el.innerHTML='<div class="card"><b>'+t("sFail",(e&&e.message)||"")+"</b></div>";return}
-var s=FS,l=s.lv,ov=Math.max(l.s,l.i,l.f,l.h),c=CROPS[FARM.k||"maiz"];if(MAPOK)draw();minfo();
-el.innerHTML=(s.demo?'<div class="demo">'+t("sDemo")+"</div>":"")+'<div class="card"><h3>'+(FARM.n||t("vg"))+" · "+M[FARM.mun][0]+"</h3><p>"+t("sLvl")+': <span class="tag" style="background:'+HC[ov]+'">'+t("l"+ov)+"</span></p>"+
-'<div class="kp"><div><b>'+s.prp+" %</b><small>"+t("k1",s.pr)+"</small></div><div><b>"+s.smp+" %</b><small>"+t("k2")+"</small></div><div><b>"+s.fz+"</b><small>"+t("k3")+"</small></div><div><b>"+s.rh+" %</b><small>"+t("k4")+"</small></div></div>"+
-"<h3>"+t("sCh")+"</h3>"+chart(s.ch)+'<p class="note">'+t("sChn")+"</p><h3>"+t("sRec")+"</h3><ul>"+recs().map(function(x){return"<li>"+x+"</li>"}).join("")+"</ul>"+
-"<details><summary>"+t("sAdv")+'</summary><div class="kp"><div><b>'+s.t+" °C</b><small>"+t("k5")+"</small></div><div><b>"+s.tr+" °C</b><small>"+t("k6")+"</small></div><div><b>"+s.hv+"</b><small>"+t("k7")+"</small></div><div><b>"+s.dry+"</b><small>"+t("k8")+'</small></div></div><p class="note">'+t("sNeed",c[0])+"</p></details>"+
-'<p class="note">'+t("sSrc",/^\d{8}$/.test(s.fecha)?s.fecha.slice(0,4)+"-"+s.fecha.slice(4,6)+"-"+s.fecha.slice(6):s.fecha)+"</p></div>"}
+/* =========================================================
+   Datos NASA de la granja: indicadores, riesgos, gráfico de
+   lluvia y recomendaciones (los cálculos están en services/nasa-power.js)
+   ========================================================= */
+
+async function showStats(force) {
+  var el = $("stats");
+  renderFarmTabs("tabs-stats", "stats");
+  if (!hasLocation()) {
+    el.innerHTML = emptyState("📍", t("sFirstT"), t("sFirst"), linkBtn("granja", "sprout", t("sGoFarm")) + linkBtn("mapa", "map", t("fB"), "btn-ghost"));
+    return;
+  }
+  el.innerHTML = skeleton(t("sLoad") + " " + t("sLoadH"), 3);
+  try {
+    await loadStats(force);
+  } catch (e) {
+    el.innerHTML = errorBox(t("sFail", (e && e.message) || ""), "stats-retry");
+    return;
+  }
+  if (CURRENT !== "stats") return;   // el usuario ya cambió de pantalla
+  el.innerHTML = statsHtml(FS);
+}
+
+function statsHtml(s) {
+  var l = s.lv, overall = Math.max(l.s, l.i, l.f, l.h), m = farmMun();
+  var crop = FARM.k ? cropName(FARM.k) : null;
+  var detail = [m[0], t("t_" + m[3]), crop, FARM.h ? num(+FARM.h, 1) + " ha" : null].filter(Boolean).join(" · ");
+  var h = "";
+
+  if (s.demo) h += '<div class="callout warn">' + esc(t("sDemo")) + "</div>";
+  if (s.stale) h += '<div class="callout warn">' + icon("offline") + "<div><p>" + esc(t("sStale", fmtStamp(s.at))) + "</p></div></div>";
+
+  // Encabezado
+  h += '<div class="card"><div class="stats-head"><div>' +
+    '<p class="eyebrow">' + icon("satellite") + esc(t("sAt", fmtDay(s.fecha))) + "</p>" +
+    "<h2>" + (FARM.k ? CROP_ICON[FARM.k] + " " : "") + esc(farmName()) + "</h2>" +
+    '<p class="sub">' + esc(detail) + "</p></div>" +
+    '<button type="button" class="btn btn-ghost btn-sm" data-act="stats-refresh">' + icon("refresh") + esc(t("refresh")) + "</button></div>" +
+    '<div class="overall">' + esc(t("sLvl")) + ": " + levelBadge(overall) + "</div></div>";
+
+  // Riesgos
+  h += '<h3 class="section-title" style="margin-top:6px">' + esc(t("sRisks")) + "</h3>" +
+    '<div class="risk-grid" style="margin-bottom:16px">' + [0, 1, 2, 3].map(function (k) { return riskTile(k, l[KEYS[k]]); }).join("") + "</div>";
+
+  // Indicadores principales
+  h += '<div class="kpi-grid">' +
+    kpi(t("kRain"), num(s.pr) + " <small>mm</small>", t("kVs", signedPct(s.prp)), toneFor(s.prp, -20, -5)) +
+    kpi(t("kSoil"), num(s.sm) + " <small>%</small>", t("kVs", signedPct(s.smp)), toneFor(s.smp, -12, -3)) +
+    kpi(t("kFrost"), num(s.fz), t("kFrostH"), s.fz >= 25 ? "bad" : s.fz >= 5 ? "warn" : "ok") +
+    kpi(t("kAir"), num(s.rh) + " <small>%</small>", t("kAirH"), s.rh <= 40 ? "bad" : s.rh <= 55 ? "warn" : "ok") +
+    "</div>";
+
+  // Gráfico de lluvia
+  var partial = isPartialMonth(s);
+  // El gráfico se dibuja al ancho real de la pantalla para que el texto no se agrande
+  var chartW = Math.max(300, Math.min(960, ($("stats").clientWidth || 360) - 40));
+  h += '<div class="card"><h3>' + esc(t("sCh")) + "</h3>" + rainChart(s.ch, partial, chartW) +
+    '<div class="chart-legend"><span><i class="lg-bar"></i>' + esc(t("sRainL")) + '</span><span><i class="lg-norm"></i>' + esc(t("sNorm")) + "</span></div>" +
+    (partial ? '<p class="note" style="margin-top:6px">' + esc(t("sPartial")) + "</p>" : "") + "</div>";
+
+  // Recomendaciones
+  h += '<div class="card"><h3>' + esc(t("sRec")) + "</h3>" +
+    (FARM.k ? "" : '<div class="callout info">' + icon("sprout") + "<div><p>" + esc(t("sNoCrop")) + "</p></div></div>") +
+    '<ul class="rec-list">' + recommendations(s).map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></div>";
+
+  // Estadísticas avanzadas
+  var c = CROPS[FARM.k || "maiz"];
+  h += '<details class="card"><summary>' + esc(t("sAdv")) + '</summary><div class="kpi-grid" style="margin-top:14px">' +
+    kpi(t("k5"), num(s.t, 1) + " <small>°C</small>", "", "") +
+    kpi(t("k6"), (s.tr > 0 ? "+" : "") + num(s.tr, 2) + " <small>°C</small>", "", "") +
+    kpi(t("k7"), num(s.hv), "", "") +
+    kpi(t("k8"), num(s.dry), "", "") +
+    '</div><p class="note">' + esc(t("sNeed", c[0])) + "</p></details>";
+
+  h += '<p class="note">' + esc(t("sSrc", fmtDay(s.fecha))) + "</p>";
+  return h;
+}
+
+function kpi(label, valueHtml, sub, tone) {
+  label = label.charAt(0).toUpperCase() + label.slice(1);
+  return '<div class="kpi' + (tone ? " tone-" + tone : "") + '"><span class="kpi-label">' + esc(label) + "</span>" +
+    '<span class="kpi-val">' + valueHtml + "</span>" + (sub ? '<span class="kpi-delta">' + esc(sub) + "</span>" : "") + "</div>";
+}
+
+/** Tono según cuánto está por debajo de lo normal */
+function toneFor(pct, bad, warn) {
+  if (pct !== pct) return "";
+  return pct <= bad ? "bad" : pct <= warn ? "warn" : "ok";
+}
+
+/** ¿El último mes del gráfico todavía no terminó? */
+function isPartialMonth(s) {
+  if (!/^\d{8}$/.test(s.fecha) || !s.ch.length) return false;
+  var last = s.ch[s.ch.length - 1];
+  return last.k === s.fecha.slice(0, 6) && +s.fecha.slice(6) < 28;
+}
+
+/* Escala «redonda» para el eje (10, 20, 50, 100, 150…) */
+function niceMax(v) {
+  if (v <= 0) return 10;
+  var p = Math.pow(10, Math.floor(Math.log(v) / Math.LN10));
+  return Math.ceil(v / p * 2) / 2 * p;
+}
+
+function monthLabel(k) {
+  try {
+    var s = new Date(+k.slice(0, 4), +k.slice(4, 6) - 1, 1).toLocaleDateString(locale(), { month: "short" }).replace(".", "");
+    return s.charAt(0).toUpperCase() + s.slice(1, 3);
+  } catch (e) { return k.slice(4); }
+}
+
+/** Gráfico de barras: lluvia de cada mes y línea de lo normal */
+function rainChart(ch, partial, width) {
+  var Wc = width || 360, Hc = Wc > 600 ? 190 : 150, left = 32, right = 6, top = 8, bottom = 22;
+  var max = niceMax(Math.max.apply(null, ch.map(function (c) { return Math.max(c.v || 0, c.n === c.n ? c.n : 0); })));
+  var cw = (Wc - left - right) / ch.length, bw = Math.min(cw - 8, 42), pad = (cw - bw) / 2;
+  var labelSize = cw < 30 ? 9.5 : 11;
+  function y(v) { return top + (Hc - top) * (1 - v / max); }
+  var s = '<svg class="chart" viewBox="0 0 ' + Wc + " " + (Hc + bottom) + '" role="img" aria-label="' + esc(t("sCh")) + '">';
+  [0, 0.5, 1].forEach(function (f) {
+    var v = max * f, yy = y(v).toFixed(1);
+    s += '<line class="ch-grid" x1="' + left + '" x2="' + (Wc - right) + '" y1="' + yy + '" y2="' + yy + '"/>' +
+      '<text class="ch-ax" x="' + (left - 6) + '" y="' + (+yy + 3.5) + '" text-anchor="end">' + Math.round(v) + "</text>";
+  });
+  ch.forEach(function (c, i) {
+    var x = left + i * cw, v = c.v || 0, last = i === ch.length - 1;
+    var tip = monthLabel(c.k) + " " + c.k.slice(0, 4) + ": " + num(v) + " mm" + (c.n === c.n ? " · " + t("sNorm") + " " + num(c.n) + " mm" : "");
+    s += '<rect class="ch-bar' + (partial && last ? " partial" : "") + '" x="' + (x + pad).toFixed(1) + '" y="' + y(v).toFixed(1) + '" width="' + bw.toFixed(1) +
+      '" height="' + Math.max(0, Hc - y(v)).toFixed(1) + '" rx="3"><title>' + esc(tip) + "</title></rect>";
+    if (c.n === c.n) {
+      s += '<line class="ch-norm" x1="' + (x + pad - 3).toFixed(1) + '" x2="' + (x + pad + bw + 3).toFixed(1) + '" y1="' + y(c.n).toFixed(1) + '" y2="' + y(c.n).toFixed(1) + '"/>';
+    }
+    s += '<text class="ch-mo" x="' + (x + cw / 2).toFixed(1) + '" y="' + (Hc + 15) + '" style="font-size:' + labelSize + 'px">' + esc(monthLabel(c.k)) + "</text>";
+  });
+  return s + "</svg>";
+}
+
+/** Recomendaciones según el cultivo y los riesgos */
+function recommendations(s) {
+  var k = FARM.k || "maiz", c = CROPS[k], l = s.lv, r = [];
+  var need = Math.round(c[0] * 90 / c[1]), balance = s.pr - need, name = cropName(k);
+  r.push(balance < 0 ? t("rW1", num(s.pr), name, num(need), num(-balance)) : t("rW2", num(s.pr), name, num(need)));
+  if (l.s >= 2) r.push(t("rS", t("l" + l.s).toLowerCase()));
+  if (l.h >= 2 && c[2]) r.push(t("rH", s.fz));
+  if (l.f >= 2) r.push(t("rF", s.hv));
+  if (l.i >= 2) r.push(t("rI"));
+  if (String(FARM.p) === "2") r.push(t("rSl"));
+  [3, 0, 2, 1].forEach(function (i) { if (l[KEYS[i]] >= 2) r = r.concat(tl("a_" + KEYS[i])); });
+  return r.slice(0, 9);
+}
+
+ACTIONS["stats-refresh"] = function () { showStats(true); };
+ACTIONS["stats-retry"] = function () { showStats(true); };
+
+VIEW_HOOKS.stats = function () { showStats(false); };

@@ -4,90 +4,301 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Cochabamba Resiliente</title>
-<link rel="stylesheet" href="css/styles.css">
+<meta name="description" content="Datos satelitales de la NASA, pronóstico, alertas y consejos para agricultores de Cochabamba, Bolivia.">
+<meta name="theme-color" content="#1b5e3a">
+<link rel="icon" href="assets/icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/views.css">
 </head>
 <body>
-<div class="top"><b>🌽 CochabambaResiliente</b><div class="tr"><span id="lg"></span><button onclick="menu(1)" data-i="menu"></button></div></div>
-<div id="menu"><div class="top" style="margin:-16px -16px 14px"><b>🌽 Menú</b><button onclick="menu(0)" data-i="close"></button></div><div class="grid" id="mg"></div></div>
-<main>
-<section id="v-inicio">
-<h1 data-i="hT"></h1><p class="sub" data-i="hS"></p>
-<div class="nasa" data-h="nasaB"></div>
-<div class="alert"><span data-h="emB"></span> <a href="#" onclick="go('aprende');return false" data-i="emL"></a></div>
-<h2 data-i="what"></h2><div class="grid" id="mg2"></div>
-<div class="card"><h2 data-i="howT"></h2><ol id="how"></ol></div>
-</section>
 
-<section id="v-mapa" hidden>
-<h2 data-i="mT"></h2><p class="sub" data-i="mH"></p>
-<div class="chips" id="bases"></div><div class="chips" id="ovs"></div>
-<label data-i="date"></label><input type="date" id="dt" onchange="setDate(this.value)">
-<div id="mp"><svg id="sv0"><image id="im0" preserveAspectRatio="none"/></svg><div id="tl"></div><svg id="sv"></svg>
-<div class="zc"><button onclick="zb(.7)" aria-label="+">＋</button><button onclick="zb(-.7)" aria-label="−">－</button><button onclick="fit(1)" aria-label="⤢">⤢</button><button onclick="gps()" aria-label="📍">📍</button></div><div id="mbn"></div></div>
-<div class="chips" id="hzs"></div>
-<p class="note" data-i="mN"></p>
-<div class="card" id="minfo"></div>
-</section>
+<!-- Iconos (se usan con icon("nombre") en JavaScript) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-logo" viewBox="0 0 24 24"><path d="M12 21v-8"/><path d="M12 13C12 9 9.5 6.5 5 6.5c0 4 2.5 6.5 7 6.5z"/><path d="M12 15c0-3.5 2.5-6 6.5-6 0 3.5-2.5 6-6.5 6z"/><path d="M7.5 21h9"/><circle cx="18.5" cy="3.8" r="1.4"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 4 3 6.5V20l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></symbol>
+  <symbol id="i-sprout" viewBox="0 0 24 24"><path d="M12 21v-8"/><path d="M12 13C12 9 9.5 6.5 5 6.5c0 4 2.5 6.5 7 6.5z"/><path d="M12 15c0-3.5 2.5-6 6.5-6 0 3.5-2.5 6-6.5 6z"/><path d="M7.5 21h9"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7.5 16v-3M12 16V8M16.5 16v-5"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-fit" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></symbol>
+  <symbol id="i-locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 22s7-6.4 7-12a7 7 0 0 0-14 0c0 5.6 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4L21 8"/><path d="M21 3v5h-5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+  <symbol id="i-satellite" viewBox="0 0 24 24"><path d="m13 7-4-4-4 4 4 4"/><path d="m17 11 4 4-4 4-4-4"/><path d="m8 12 4 4 6-6-4-4z"/><path d="m16 8 3-3"/><path d="M9 21a6 6 0 0 0-6-6"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
+  <symbol id="i-offline" viewBox="0 0 24 24"><path d="m2 2 20 20"/><path d="M8.5 16.4a5 5 0 0 1 7 0"/><path d="M5 12.9a10 10 0 0 1 4.6-2.7"/><path d="M19 12.9a10 10 0 0 0-2.4-1.7"/><path d="M2 8.8a15 15 0 0 1 4-2.5"/><path d="M22 8.8a15 15 0 0 0-11.3-3.7"/><path d="M12 20h.01"/></symbol>
+</svg>
 
-<section id="v-granja" hidden>
-<h2 data-i="vg2"></h2>
-<div class="card">
-<label data-i="fN"></label><input id="f-n" data-p="fNp">
-<label data-i="fM"></label><select id="f-m"></select>
-<label data-i="fL"></label><input id="f-c" readonly data-p="fLp">
-<button class="btn o" onclick="go('mapa')" data-i="fB"></button>
-<label data-i="fK"></label><select id="f-k"></select>
-<label data-i="fH"></label><input id="f-h" type="number" min="0" step="0.1">
-<label data-i="fR"></label><select id="f-r"></select>
-<details><summary data-i="fE"></summary>
-<label data-i="fA"></label><input id="f-a" type="number">
-<label data-i="fP"></label><select id="f-p"></select>
-<label data-i="fS"></label><select id="f-s"></select>
-<label data-i="fD"></label><input id="f-d" type="date">
-<label data-i="fW"></label><input id="f-w" type="number">
-</details>
-<button class="btn" onclick="saveFarm()" data-i="fSave"></button><button class="btn o" onclick="delFarm()" data-i="fDel"></button>
-<div id="fok"></div>
-</div>
-</section>
+<a class="skip-link" href="#main" data-i="skip"></a>
 
-<section id="v-stats" hidden><h2 data-i="vs2"></h2><div id="stats"></div></section>
+<header class="appbar">
+  <a class="brand" href="#/inicio" aria-label="Cochabamba Resiliente">
+    <span class="brand-mark"><svg class="ic" aria-hidden="true"><use href="#i-logo"/></svg></span>
+    <span class="brand-name"><small>Cochabamba</small><strong>Resiliente</strong></span>
+  </a>
+  <nav class="topnav" id="topnav" data-a="navA"></nav>
+  <div class="appbar-end">
+    <select class="lang-sel" id="lang-sel" data-a="langA"></select>
+    <div class="lang-seg" id="lang-seg" role="group" data-a="langA"></div>
+    <button class="icon-btn only-mobile" type="button" data-act="menu-open" data-a="menuA"><svg class="ic" aria-hidden="true"><use href="#i-grid"/></svg></button>
+  </div>
+</header>
 
-<section id="v-alertas" hidden>
-<h2 data-i="aT"></h2>
-<div class="card"><h3 data-i="aToday"></h3><div id="als"><p class="sub" data-i="aHint"></p></div><button class="btn" onclick="alerts()" data-i="aCheck"></button></div>
-<div class="card"><h3 data-i="sT"></h3>
-<label data-i="sN"></label><input id="s-n"><label data-i="sE"></label><input id="s-e" type="email" placeholder="correo@ejemplo.com"><label data-i="sW"></label><input id="s-w" placeholder="+591 ...">
-<div class="chips" id="s-t"></div>
-<button class="btn" onclick="subscribe()" data-i="sBtn"></button><button class="btn o" onclick="testMail()" data-i="sTest"></button>
-<p class="note" id="s-m"></p>
-<details><summary data-i="admT"></summary><p class="note" data-i="admH"></p><input id="api" placeholder="https://script.google.com/macros/s/.../exec"><button class="btn o" onclick="saveApi()" data-i="save"></button></details></div>
-</section>
+<div class="net-pill" id="net" role="status" hidden><svg class="ic" aria-hidden="true"><use href="#i-offline"/></svg><span data-i="offline"></span></div>
 
-<section id="v-chat" hidden>
-<h2 data-i="cT"></h2>
-<div class="card"><div id="msgs"></div><div class="chips" id="cc"></div>
-<div style="display:flex;gap:8px"><input id="ci" data-p="cPh"><button class="btn" style="margin:0" onclick="sendC()" data-i="cSend"></button></div>
-<details><summary data-i="cCfg"></summary><label data-i="cModel"></label><input id="cm" placeholder="gpt-5.3-chat-latest"><label data-i="cKey"></label><input id="ck" type="password" placeholder="sk-..."><button class="btn o" onclick="saveCfg()" data-i="save"></button><p class="note" data-i="cNote"></p></details></div>
-</section>
+<main id="main" tabindex="-1">
 
-<section id="v-aprende" hidden>
-<h2 data-i="vl"></h2>
-<div class="card"><h3 data-i="lCt"></h3><p data-i="lC"></p><h3>🌊 Súper Niño 2026-27</h3><p data-i="lN"></p></div>
-<div class="card"><h3 data-i="lDo"></h3><div id="learn"></div><p class="note" data-i="lNote"></p></div>
-<div class="card"><h3 data-i="lSt"></h3><ul id="lsrc"></ul><p class="note" data-i="lSn"></p></div>
-</section>
+  <!-- ============ Inicio ============ -->
+  <section id="v-inicio" class="view" aria-labelledby="h-inicio">
+    <div class="hero">
+      <div class="hero-body">
+        <p class="eyebrow" data-i="hEy"></p>
+        <h1 id="h-inicio" data-i="hT"></h1>
+        <p data-i="hS"></p>
+        <div class="hero-actions" id="hero-actions"></div>
+      </div>
+    </div>
 
-<section id="v-compartir" hidden>
-<h2 data-i="shT"></h2><div class="card"><p class="sub" data-i="shH"></p>
-<img id="qr" class="qr" alt="QR" hidden>
-<input id="shu" placeholder="https://..." oninput="qrUpd()">
-<button class="btn" onclick="copyU()" data-i="shCopy"></button><a class="btn" id="shwa" style="display:inline-block;text-decoration:none;background:#25d366;color:#073b1a" target="_blank" rel="noopener" data-i="shWa"></a></div>
-</section>
+    <div class="callout danger" role="note">
+      <div><span data-h="emB"></span> <a href="#/aprende" data-i="emL"></a></div>
+    </div>
+
+    <div id="home-farm"></div>
+
+    <h2 class="section-title" data-i="what"></h2>
+    <div class="feature-grid" id="home-grid"></div>
+
+    <div class="card nasa-card" style="margin-top:16px">
+      <span class="nasa-ic"><svg class="ic" aria-hidden="true"><use href="#i-satellite"/></svg></span>
+      <div><p data-h="nasaB"></p><a href="#/aprende" data-i="moreData"></a></div>
+    </div>
+  </section>
+
+  <!-- ============ Mapa ============ -->
+  <section id="v-mapa" class="view" hidden aria-labelledby="h-mapa">
+    <header class="view-head">
+      <h2 id="h-mapa" data-i="mT"></h2>
+      <p class="sub" data-i="mH"></p>
+    </header>
+    <div class="map-card">
+      <div id="mp" tabindex="0" role="application" data-a="mapA">
+        <svg id="sv0"><image id="im0" preserveAspectRatio="none"/></svg>
+        <div id="tl"></div>
+        <svg id="sv"></svg>
+        <div class="map-ctrl">
+          <button type="button" data-act="map-zoom-in" data-a="zIn"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
+          <button type="button" data-act="map-zoom-out" data-a="zOut"><svg class="ic" aria-hidden="true"><use href="#i-minus"/></svg></button>
+          <button type="button" data-act="map-fit" data-a="zFit"><svg class="ic" aria-hidden="true"><use href="#i-fit"/></svg></button>
+          <span class="gap"></span>
+          <button type="button" data-act="gps" data-a="zGps"><svg class="ic" aria-hidden="true"><use href="#i-locate"/></svg></button>
+        </div>
+        <div class="map-legend" id="legend"></div>
+        <div class="map-banner" id="mbn" role="status" hidden></div>
+      </div>
+      <div class="map-tools">
+        <div class="tool-row"><span class="tool-label" data-i="lBase"></span><div class="seg scroll" id="bases"></div></div>
+        <div class="tool-row"><span class="tool-label" data-i="lLayers"></span><div class="chips scroll" id="ovs"></div></div>
+        <div class="tool-row"><span class="tool-label" data-i="lRisk"></span><div class="chips scroll" id="hzs"></div></div>
+        <div class="tool-row" id="date-row"><label for="dt" data-i="date"></label><input type="date" id="dt"></div>
+      </div>
+    </div>
+    <p class="note" data-i="mN"></p>
+    <div id="minfo"></div>
+  </section>
+
+  <!-- ============ Mi granja (formulario) ============ -->
+  <section id="v-granja" class="view" hidden aria-labelledby="h-granja">
+    <div class="seg farm-tabs" id="tabs-granja" hidden></div>
+    <header class="view-head">
+      <h2 id="h-granja" data-i="vg2"></h2>
+      <p class="sub" data-i="fIntro"></p>
+    </header>
+    <form id="farm-form" novalidate>
+      <div class="card">
+        <h3 class="step-title"><span class="step-n">1</span><span data-i="fL"></span></h3>
+        <div id="loc-box"></div>
+        <label for="f-m" data-i="fM"></label>
+        <select id="f-m"></select>
+        <p class="note" data-i="fMunNote" style="margin-top:6px"></p>
+      </div>
+
+      <div class="card">
+        <h3 class="step-title"><span class="step-n">2</span><span data-i="fK"></span></h3>
+        <div class="tile-grid" id="f-k" role="radiogroup" data-a="fK"></div>
+        <p class="field-err" id="f-crop-err" role="alert" data-i="fNeedCrop" hidden></p>
+      </div>
+
+      <div class="card">
+        <h3 class="step-title"><span class="step-n">3</span><span data-i="fDet"></span></h3>
+        <label for="f-n" data-i="fN"></label>
+        <input id="f-n" data-p="fNp" autocomplete="off" maxlength="60">
+        <label for="f-h" data-i="fH"></label>
+        <input id="f-h" type="number" inputmode="decimal" min="0" step="0.1">
+        <span class="label" data-i="fR"></span>
+        <div class="chips" id="f-r" role="radiogroup" data-a="fR"></div>
+        <details class="details-box">
+          <summary data-i="fE"></summary>
+          <label for="f-a" data-i="fA"></label><input id="f-a" type="number" inputmode="numeric">
+          <label for="f-p" data-i="fP"></label><select id="f-p"></select>
+          <label for="f-s" data-i="fS"></label><select id="f-s"></select>
+          <label for="f-d" data-i="fD"></label><input id="f-d" type="date">
+          <label for="f-w" data-i="fW"></label><input id="f-w" type="number" inputmode="numeric">
+        </details>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-lg" data-i="fSave"></button>
+        <button type="button" class="btn btn-danger" id="f-del" data-act="farm-delete" data-i="fDel"></button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ============ Datos NASA de la granja ============ -->
+  <section id="v-stats" class="view" hidden aria-label="NASA">
+    <div class="seg farm-tabs" id="tabs-stats" hidden></div>
+    <div id="stats"></div>
+  </section>
+
+  <!-- ============ Alertas ============ -->
+  <section id="v-alertas" class="view" hidden aria-labelledby="h-alertas">
+    <header class="view-head">
+      <h2 id="h-alertas" data-i="aT"></h2>
+      <p class="sub" id="a-farm"></p>
+    </header>
+
+    <div class="card">
+      <div class="card-head">
+        <h3 data-i="fcT"></h3>
+        <button type="button" class="btn btn-ghost btn-sm" data-act="alerts-refresh"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg><span data-i="refresh"></span></button>
+      </div>
+      <div id="forecast"></div>
+      <p class="note" id="fc-src" style="margin-top:10px"></p>
+    </div>
+
+    <div class="card">
+      <h3 data-i="aToday"></h3>
+      <div id="als" class="alert-list" aria-live="polite"></div>
+    </div>
+
+    <div class="card">
+      <h3 class="step-title"><svg class="ic" aria-hidden="true"><use href="#i-mail"/></svg><span data-i="sT"></span></h3>
+      <p class="sub" data-i="sIntro"></p>
+      <div id="sub-state"></div>
+      <form id="sub-form" novalidate>
+        <label for="s-n" data-i="sN"></label><input id="s-n" autocomplete="name" maxlength="60">
+        <label for="s-e" data-i="sE"></label><input id="s-e" type="email" autocomplete="email" inputmode="email" placeholder="correo@ejemplo.com">
+        <label for="s-w" data-i="sW"></label><input id="s-w" type="tel" autocomplete="tel" placeholder="+591 ...">
+        <span class="label" data-i="sTypes"></span>
+        <div class="chips" id="s-t"></div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" data-i="sBtn"></button>
+          <button type="button" class="btn btn-ghost" data-act="sub-test" data-i="sTest"></button>
+        </div>
+        <p class="form-msg" id="s-m" role="status"></p>
+      </form>
+      <details class="details-box">
+        <summary data-i="admT"></summary>
+        <p class="note" data-h="admH" style="margin-top:10px"></p>
+        <input id="api" type="url" placeholder="https://script.google.com/macros/s/.../exec">
+        <div class="actions"><button type="button" class="btn btn-ghost btn-sm" data-act="api-save" data-i="save"></button></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ Cosecha (chat) ============ -->
+  <section id="v-chat" class="view" hidden aria-labelledby="h-chat">
+    <div class="card chat-card">
+      <header class="chat-head">
+        <span class="avatar" aria-hidden="true">🌱</span>
+        <div>
+          <h2 id="h-chat" data-i="cName"></h2>
+          <p class="chat-mode" id="chat-mode"><i></i><span></span></p>
+        </div>
+        <button type="button" class="icon-btn" data-act="chat-clear" data-a="cClear"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+      </header>
+      <div class="chat-log" id="msgs" role="log" aria-live="polite"></div>
+      <div class="chat-suggest chips scroll" id="cc"></div>
+      <form class="chat-form" id="chat-form">
+        <label for="ci" class="sr-only" data-i="cPh"></label>
+        <input id="ci" data-p="cPh" autocomplete="off" enterkeyhint="send" maxlength="500">
+        <button type="submit" class="btn btn-primary" data-a="cSend"><svg class="ic" aria-hidden="true"><use href="#i-send"/></svg></button>
+      </form>
+    </div>
+    <details class="details-box">
+      <summary data-i="cCfg"></summary>
+      <label for="cm" data-i="cModel"></label><input id="cm" placeholder="gpt-5.3-chat-latest">
+      <label for="ck" data-i="cKey"></label><input id="ck" type="password" placeholder="sk-..." autocomplete="off">
+      <div class="actions"><button type="button" class="btn btn-ghost btn-sm" data-act="chat-cfg-save" data-i="save"></button></div>
+      <p class="note" data-i="cNote" style="margin-top:10px"></p>
+    </details>
+  </section>
+
+  <!-- ============ Aprende ============ -->
+  <section id="v-aprende" class="view" hidden aria-labelledby="h-aprende">
+    <header class="view-head"><h2 id="h-aprende" data-i="vl"></h2></header>
+    <div class="card"><h3 data-i="lCt"></h3><p data-i="lC"></p></div>
+    <div class="callout warn">
+      <span class="callout-ic" aria-hidden="true">🌊</span>
+      <div><b>Súper Niño 2026-27</b><p data-i="lN"></p></div>
+    </div>
+    <div class="card"><h3 data-i="lDo"></h3><div id="learn" class="accordion"></div><p class="note" data-i="lNote"></p></div>
+    <div class="card"><h3 data-i="lSt"></h3><ul id="lsrc" class="source-list"></ul><p class="note" data-i="lSn"></p></div>
+  </section>
+
+  <!-- ============ Compartir ============ -->
+  <section id="v-compartir" class="view" hidden aria-labelledby="h-compartir">
+    <header class="view-head"><h2 id="h-compartir" data-i="shT"></h2><p class="sub" data-i="shH"></p></header>
+    <div class="card share-grid">
+      <div class="qr-box">
+        <img id="qr" data-a="shQrA" width="240" height="240" hidden>
+        <p class="qr-empty" id="qr-empty" data-i="shNoUrl"></p>
+      </div>
+      <div>
+        <label for="shu" data-i="shUrl"></label>
+        <input id="shu" type="url" placeholder="https://...">
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" data-act="share-copy"><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg><span data-i="shCopy"></span></button>
+          <a class="btn btn-wa" id="shwa" target="_blank" rel="noopener" data-i="shWa"></a>
+          <button type="button" class="btn btn-ghost" id="sh-native" data-act="share-native" hidden><svg class="ic" aria-hidden="true"><use href="#i-share"/></svg><span data-i="shNative"></span></button>
+        </div>
+      </div>
+    </div>
+  </section>
 </main>
-<button id="fab" onclick="go('chat')">💬 Cosecha</button>
-<div id="toast"></div>
 
+<nav class="tabbar" id="tabbar" data-a="navA"></nav>
+
+<!-- Menú con todas las secciones (celular y tablet) -->
+<div class="sheet" id="menu" hidden data-act="menu-backdrop">
+  <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="menu-t">
+    <div class="sheet-grab" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="menu-t" data-i="menuT"></h2>
+      <button type="button" class="icon-btn" id="menu-close" data-act="menu-close" data-a="closeA"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="feature-grid" id="menu-grid"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Orden de carga: configuración → utilidades → textos → datos → estado → servicios → pantallas → app -->
 <script src="js/config.js"></script>
 <script src="js/core/utils.js"></script>
 <script src="js/i18n/es.js"></script>
@@ -96,12 +307,21 @@
 <script src="js/i18n/i18n.js"></script>
 <script src="js/data/geo.js"></script>
 <script src="js/data/municipios.js"></script>
+<script src="js/data/conocimiento.js"></script>
+<script src="js/core/state.js"></script>
+<script src="js/core/ui.js"></script>
+<script src="js/core/router.js"></script>
+<script src="js/services/nasa-power.js"></script>
+<script src="js/services/forecast.js"></script>
+<script src="js/services/backend.js"></script>
 <script src="js/map/geometry.js"></script>
 <script src="js/map/map.js"></script>
+<script src="js/features/inicio.js"></script>
 <script src="js/features/granja.js"></script>
 <script src="js/features/estadisticas.js"></script>
 <script src="js/features/alertas.js"></script>
 <script src="js/features/chat.js"></script>
+<script src="js/features/aprende.js"></script>
 <script src="js/features/compartir.js"></script>
 <script src="js/app.js"></script>
 </body>
